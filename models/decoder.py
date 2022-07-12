@@ -1,9 +1,10 @@
+import torch
+import numpy as np
 import torch.nn as nn
 from models.embed import DataEmbedding
 from models.attention import MultiHeadAttention
 from models.encoder import PoswiseFeedForwardNet
-import torch
-import numpy as np
+
 
 
 class Decoder(nn.Module):

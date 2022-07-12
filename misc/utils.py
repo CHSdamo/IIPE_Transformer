@@ -15,6 +15,9 @@ from torch.optim.lr_scheduler import LambdaLR
 
 class Experiment(object):
     def __init__(self, args):
+        self.test_dataset = None
+        self.val_dataset = None
+        self.train_dataset = None
         self.args = args
         self.dataset = VMASDataset(self.args)
         self.split_dataset()
@@ -122,9 +125,9 @@ class Experiment(object):
             iter_count = 0
             running_loss = []
 
-
             self.model.train()
             epoch_time = time.time()
+
             # pred[:,:,-1] == targets, pred[:,:,-2] == labels
             for i, (sample, pred) in enumerate(tqdm(train_loader)):
                 iter_count += 1
@@ -133,10 +136,10 @@ class Experiment(object):
                 # dec_logits, reg_output, enc_self_attns, dec_self_attns, dec_enc_attns = self.process_one_batch(
                 # sample, pred)
                 cls_output, reg_output, _, _, _ = self.process_one_batch(sample, pred)
+
                 loss1 = criterion_ce(cls_output, pred[:, :, -2].view(-1).long())
                 loss2 = criterion_rmse(reg_output, pred[:, :, -1])
                 loss = loss1 + loss2
-
                 running_loss.append(loss.item())
 
                 loss.backward()
@@ -170,15 +173,13 @@ class Experiment(object):
     def process_one_batch(self, batch_x, batch_y):
         # print(batch_x.size(), batch_y.size())
         batch_x = batch_x.float().to(self.device)
-        batch_y = batch_y.float()
-        dec_inp = batch_y
+        dec_inp = batch_y.float()
         # dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         # dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
         outputs = self.model(batch_x, dec_inp)
 
-        # target = batch_y[:, -self.args.pred_len:, -1:].to(self.device)
-        return outputs  # , target
-
+        return outputs       #  dec_logits, reg_output, enc_self_attns, dec_self_attns, dec_enc_attns
+    
     def val(self, val_data, val_loader, criterion_ce, criterion_rmse):
         self.model.eval()
         total_loss = []
