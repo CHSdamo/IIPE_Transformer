@@ -13,6 +13,7 @@ from dataset.vocab import Vocabulary
 class VMASDataset(Dataset):
     def __init__(self, args):
 
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.encoded_df = None
         self.encoder_fit = {}
         self.dataset_len = None
@@ -31,8 +32,8 @@ class VMASDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        sample = torch.tensor(self.data[index])
-        pred = torch.tensor(self.pred[index])
+        sample = torch.tensor(self.data[index]).to(self.device)
+        pred = torch.tensor(self.pred[index]).to(self.device)
 
         return sample, pred
 
@@ -86,7 +87,6 @@ class VMASDataset(Dataset):
         self.processed_df['Car Code'] = col_data
         col_data = self.encoder_fit_transform(self.processed_df[['Duration']], enc_type='value')
         self.processed_df['Duration'] = col_data
-
 
     def read_csv_file(self):
         file = './saves/merged_df.csv'
