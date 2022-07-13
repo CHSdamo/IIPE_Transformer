@@ -6,11 +6,11 @@ from models.attention import MultiHeadAttention
 from models.encoder import PoswiseFeedForwardNet
 
 
-
 class Decoder(nn.Module):
     def __init__(self, args):
         super(Decoder, self).__init__()
 
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dec_embedding = DataEmbedding(args.d_model, args.dropout)
         self.layers = nn.ModuleList([DecoderLayer(args) for _ in range(args.dec_layers)])  # Decoder的blocks
 
@@ -52,15 +52,14 @@ class Decoder(nn.Module):
         # dec_outputs: [batch_size, tgt_len, d_model]
         return dec_outputs, dec_self_attns, dec_enc_attns
 
-    @staticmethod
-    def get_attn_subsequence_mask(seq):
+    def get_attn_subsequence_mask(self, seq):
         """建议打印出来看看是什么的输出（一目了然）
         seq: [batch_size, tgt_len]
         """
         attn_shape = [seq.size(0), seq.size(1), seq.size(1)]
         # attn_shape: [batch_size, tgt_len, tgt_len]
         subsequence_mask = np.triu(np.ones(attn_shape), k=1)  # 生成一个上三角矩阵 从index1开始[[0,1,1]]
-        subsequence_mask = torch.from_numpy(subsequence_mask).byte()
+        subsequence_mask = torch.from_numpy(subsequence_mask).byte().to(self.device)
         return subsequence_mask  # [batch_size, tgt_len, tgt_len]
 
 

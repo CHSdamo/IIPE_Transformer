@@ -19,6 +19,7 @@ class MultiHeadAttention(nn.Module):
         self.W_V = nn.Linear(args.d_model, args.d_v * args.n_heads, bias=False)
         # 这个全连接层可以保证多头attention的输出仍然是seq_len x d_model
         self.fc = nn.Linear(args.n_heads * args.d_v, args.d_model, bias=False)
+        self.ln = nn.LayerNorm(self.args.d_model)
 
     def forward(self, input_Q, input_K, input_V, attn_mask=None):
         """
@@ -52,8 +53,9 @@ class MultiHeadAttention(nn.Module):
         context = context.transpose(1, 2).reshape(batch_size, -1, self.args.n_heads * self.args.d_v)
 
         # 这个全连接层可以保证多头attention的输出仍然是seq_len x d_model
-        output = self.fc(context)  # [batch_size, len_q, d_model]
-        return nn.LayerNorm(self.args.d_model)(output + residual), attn
+        output = self.fc(context) # [batch_size, len_q, d_model]
+        output = self.ln(output + residual)
+        return output, attn
 
 
 class ScaledDotProductAttention(nn.Module):

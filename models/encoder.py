@@ -68,6 +68,7 @@ class PoswiseFeedForwardNet(nn.Module):
             nn.ReLU(),
             nn.Linear(args.d_ff, args.d_model, bias=False)
         )
+        self.ln = nn.LayerNorm(self.args.d_model)
 
     def forward(self, inputs):
         """
@@ -75,4 +76,5 @@ class PoswiseFeedForwardNet(nn.Module):
         """
         residual = inputs
         output = self.fc(inputs)
-        return nn.LayerNorm(self.args.d_model)(output + residual)  # [batch_size, seq_len, d_model]
+        output = self.ln(output + residual)   # [batch_size, seq_len, d_model]
+        return output
