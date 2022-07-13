@@ -19,9 +19,9 @@ class Experiment(object):
         self.val_dataset = None
         self.train_dataset = None
         self.args = args
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dataset = VMASDataset(self.args)
         self.split_dataset()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self._build_model().to(self.device)
 
     def _build_model(self):
@@ -133,14 +133,16 @@ class Experiment(object):
                 iter_count += 1
                 optimizer.zero_grad()
 
-                # dec_logits, reg_output, enc_self_attns, dec_self_attns, dec_enc_attns = self.process_one_batch(
-                # sample, pred)
+                # dec_logits, reg_output, enc_self_attns, dec_self_attns, dec_enc_attns
                 cls_output, reg_output, _, _, _ = self.process_one_batch(sample, pred)
 
                 loss1 = criterion_ce(cls_output, pred[:, :, -2].view(-1).long())
                 loss2 = criterion_rmse(reg_output, pred[:, :, -1])
                 loss = loss1 + loss2
                 running_loss.append(loss.item())
+
+                if (i + 1) % 1000 == 0:
+                    print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
 
                 loss.backward()
                 optimizer.step()
@@ -179,7 +181,7 @@ class Experiment(object):
         outputs = self.model(batch_x, dec_inp)
 
         return outputs       #  dec_logits, reg_output, enc_self_attns, dec_self_attns, dec_enc_attns
-    
+
     def val(self, val_data, val_loader, criterion_ce, criterion_rmse):
         self.model.eval()
         total_loss = []
