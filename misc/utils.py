@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import LambdaLR
 
 class Experiment(object):
     def __init__(self, args):
-        self.counter = None
+        self.counter = 0
         self.patience = 3
         self.best_score = None
         self.early_stop = False
