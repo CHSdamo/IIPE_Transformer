@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-from dataset.vocab import Vocabulary
+from misc.tools import Vocabulary
 
 
 class PositionalEmbedding(nn.Module):
@@ -27,7 +27,7 @@ class PositionalEmbedding(nn.Module):
 class LabelEmbedding(nn.Module):
     def __init__(self, d_model):
         super(LabelEmbedding, self).__init__()
-        self.vocab_size = Vocabulary().vocab_size
+        self.vocab_size = Vocabulary().vocab.__len__()
         self.label_embedding = nn.Embedding(self.vocab_size, d_model)
 
     def forward(self, x):
@@ -35,13 +35,14 @@ class LabelEmbedding(nn.Module):
         return x
 
 
-class TokenEmbedding(nn.Module):    # for CarCode
-    def __init__(self, d_model):
+class TokenEmbedding(nn.Module):    # for CarCode / error type
+    def __init__(self, d_model, dataset):
         super(TokenEmbedding, self).__init__()
-        self.token_embedding = nn.Embedding(7, d_model)
+        token_dim = dataset.label_class()
+        self.token_embedding = nn.Embedding(token_dim, d_model)
 
     def forward(self, x):
-        x = self.token_embedding(x[:, :, 0].long())
+        x = self.token_embedding(x.long())
         return x
 
 
@@ -56,20 +57,20 @@ class ValueEmbedding(nn.Module):
 
 
 class DataEmbedding(nn.Module):
-    def __init__(self, d_model, dropout=0.1):
+    def __init__(self, d_model, dataset, dropout=0.1):
         super(DataEmbedding, self).__init__()
 
         self.label_embedding = LabelEmbedding(d_model)
         self.value_embedding = ValueEmbedding(d_model)
-        self.token_embedding = TokenEmbedding(d_model)
+        self.token_embedding = TokenEmbedding(d_model, dataset)
         self.position_embedding = PositionalEmbedding(d_model)
 
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, x):
-        x_tmp = self.value_embedding(x) \
+    def forward(self, x, mark):
+        x_embd = self.value_embedding(x) \
                 + self.label_embedding(x) \
-                + self.token_embedding(x) \
+                + self.token_embedding(mark) \
                 + self.position_embedding(x)
 
-        return self.dropout(x_tmp)
+        return self.dropout(x_embd)

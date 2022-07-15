@@ -4,17 +4,17 @@ from models.attention import MultiHeadAttention
 
 
 class Encoder(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, dataset):
         super(Encoder, self).__init__()
 
-        self.enc_embedding = DataEmbedding(args.d_model, args.dropout)
+        self.enc_embedding = DataEmbedding(args.d_model, dataset, args.dropout)
         self.layers = nn.ModuleList([EncoderLayer(args) for _ in range(args.enc_layers)])
 
-    def forward(self, enc_inputs):
+    def forward(self, enc_inputs, batch_x_mark):
         """
         enc_inputs: [batch_size, src_len]
         """
-        enc_outputs = self.enc_embedding(enc_inputs)
+        enc_outputs = self.enc_embedding(enc_inputs, batch_x_mark)
 
         # Encoder输入序列的pad mask矩阵
         '''
