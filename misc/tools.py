@@ -1,6 +1,29 @@
 import torch
 
 
+def adjust_learning_rate(optimizer, epoch, args):
+    # lr = args.learning_rate * (0.2 ** (epoch // 2))
+    if args.lradj == 'type1':
+        lr_adjust = {epoch: args.learning_rate * (0.5 ** ((epoch - 1) // 1))}
+    elif args.lradj == 'type2':
+        lr_adjust = {
+            2: 5e-5, 4: 1e-5, 6: 5e-6, 8: 1e-6,
+            10: 5e-7, 15: 1e-7, 20: 5e-8
+        }
+    if epoch in lr_adjust.keys():
+        lr = lr_adjust[epoch]
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+        print('Updating learning rate to {}'.format(lr))
+
+
+class dotdict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+
 class StandardScaler:
     def __init__(self):
         self.mean = 0.
@@ -24,6 +47,17 @@ class StandardScaler:
         return (data * std) + mean
 
 
+class TriangularCausalMask:
+    def __init__(self, B, L, device="cpu"):
+        mask_shape = [B, 1, L, L]
+        with torch.no_grad():
+            self._mask = torch.triu(torch.ones(mask_shape, dtype=torch.bool), diagonal=1).to(device)
+
+    @property
+    def mask(self):
+        return self._mask
+
+
 class Vocabulary:
     def __init__(self):
         self.vocab = self.label2id()
@@ -32,7 +66,91 @@ class Vocabulary:
         len(self.vocab)
 
     def label2id(self):
-        vocab = {'MABT1.7220.0': 0,
+        vocab = {'MABT1.7220.AC 000': 0,
+                 'MABT1.7220.AC 001': 1,
+                 'MABT1.7220.AC 002': 2,
+                 'MABT1.7220.AC 003': 3,
+                 'MABT1.7220.AC 004': 4,
+                 'MABT1.7220.AC 005': 5,
+                 'MABT1.7220.AC 006': 6,
+                 'MABT1.7230.AC 000': 7,
+                 'MABT1.7230.AC 001': 8,
+                 'MABT1.7230.AC 002': 9,
+                 'MABT1.7230.AC 003': 10,
+                 'MABT1.7230.AC 004': 11,
+                 'MABT1.7230.AC 005': 12,
+                 'MABT1.7230.AC 006': 13,
+                 'MABT1.7240.AC 000': 14,
+                 'MABT1.7240.AC 001': 15,
+                 'MABT1.7240.AC 002': 16,
+                 'MABT1.7240.AC 003': 17,
+                 'MABT1.7240.AC 004': 18,
+                 'MABT1.7240.AC 005': 19,
+                 'MABT1.7240.AC 006': 20,
+                 'MABT1.7240.AC 007': 21,
+                 'MABT1.7240.AC 008': 22,
+                 'MABT1.7240.AC 009': 23,
+                 'MABT1.7240.AC 010': 24,
+                 'MABT1.7240.AC 011': 25,
+                 'MABT1.7240.AC 012': 26,
+                 'MABT1.7240.AC 013': 27,
+                 'MABT1.7240.AC 014': 28,
+                 'MABT1.7240.AC 015': 29,
+                 'MABT1.7240.AC 016': 30,
+                 'MABT1.7240.AC 017': 31,
+                 'MABT1.7240.AC 018': 32,
+                 'MABT1.7240.AC 019': 33,
+                 'MABT1.7240.AC 020': 34,
+                 'MABT1.7240.AC 021': 35,
+                 'MABT1.7240.AC 022': 36,
+                 'MABT1.7240.AC 023': 37,
+                 'MABT1.7240.AC 024': 38}
+
+        return vocab
+
+    def id2label(self):
+        idx2label = {i: w for i, w in enumerate(self.vocab)}
+        return idx2label
+
+    def car2label(self):
+
+        return
+
+'''
+'MABT1.7240.0': 0,
+                 'MABT1.7240.1': 1,
+                 'MABT1.7240.2': 2,
+                 'MABT1.7240.3': 3,
+                 'MABT1.7240.4': 4,
+                 'MABT1.7240.5': 5,
+                 'MABT1.7240.6': 6,
+                 'MABT1.7240.7': 7,
+                 'MABT1.7240.8': 8,
+                 'MABT1.7240.9': 9,
+                 'MABT1.7240.10': 10,
+                 'MABT1.7240.11': 11,
+                 'MABT1.7240.12': 12,
+                 'MABT1.7240.13': 13,
+                 'MABT1.7240.14': 14,
+                 'MABT1.7240.15': 15,
+                 'MABT1.7240.16': 16,
+                 'MABT1.7240.17': 17,
+                 'MABT1.7240.18': 18,
+                 'MABT1.7240.19': 19,
+                 'MABT1.7240.20': 20,
+                 'MABT1.7240.21': 21,
+                 'MABT1.7240.22': 22,
+                 'MABT1.7240.23': 23,
+                 'MABT1.7240.24': 24
+
+'''
+
+
+
+
+
+'''
+                 'MABT1.7220.0': 0,
                  'MABT1.7220.1': 1,
                  'MABT1.7220.2': 2,
                  'MABT1.7220.3': 3,
@@ -70,7 +188,12 @@ class Vocabulary:
                  'MABT1.7240.21': 35,
                  'MABT1.7240.22': 36,
                  'MABT1.7240.23': 37,
-                 'MABT1.7240.24': 38,
+                 'MABT1.7240.24': 38
+'''
+
+
+
+'''
                  'MABT2.7260.0': 39,
                  'MABT2.7260.1': 40,
                  'MABT2.7260.2': 41,
@@ -159,11 +282,5 @@ class Vocabulary:
                  'MABT3.7280.40': 124,
                  'MABT3.7280.41': 125,
                  'MABT3.7280.42': 126,
-                 'MABT3.7280.43': 127}
-
-        return vocab
-
-    def id2label(self):
-        idx2label = {i: w for i, w in enumerate(self.vocab)}
-        return idx2label
-
+                 'MABT3.7280.43': 127
+'''
