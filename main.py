@@ -14,20 +14,20 @@ def main(args):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)  # torch.cuda
 
-    setting = '{}_sl{}_pl{}_bs{}_ep{}_el{}_dl{}_dim{}_heads{}'.format(args.model, args.seq_len, args.pred_len,
-                                                                           args.batch_size, args.epochs,
-                                                                           args.enc_layers, args.dec_layers,
-                                                                           args.d_model, args.n_heads)
+    setting = '{}_sl{}_ll{}_pl{}_sd{}_bs{}_ep{}_el{}_dl{}_dim{}_heads{}_fc{}_attn{}_seed{}'.format(args.model,
+                args.seq_len, args.label_len, args.pred_len, args.stride,
+                args.batch_size, args.epochs, args.enc_layers, args.dec_layers, args.d_model, args.n_heads, args.d_ff,
+                args.attn, args.seed)
+
     exp = Experiment(args)
-    print('>>>>>>>start training : >>>>>>>>>>>>>>>>>>>>>>>>>>')
-    exp.train(setting)
 
-    # print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-    # exp.test(setting)
+    if args.model_mode == 'e2e' or args.model_mode == 'train':
+        print('>>>>>>>start training : >>>>>>>>>>>>>>>>>>>>>>>>>>')
+        exp.train(setting)
 
-    # if args.do_predict:
-    #     print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-    #     exp.predict(setting, True)
+    if args.model_mode == 'e2e' or args.model_mode == 'pred':
+        print('>>>>>>>predicting : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        exp.predict(setting)
 
     torch.cuda.empty_cache()
 
