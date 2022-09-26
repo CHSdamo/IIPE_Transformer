@@ -70,9 +70,6 @@ class VMASDataset(Dataset):
             self.src_seq_marks.append(src_seq_mark)
             self.tgt_seq_marks.append(tgt_seq_mark)
 
-        # os.makedirs('./saves/testing', exist_ok=True)
-        # np.save('./saves/testing/sample.npy', np.asarray(self.sample))
-        # np.save('./saves/testing/pred.npy', np.asarray(self.pred))
         assert len(self.pred) == len(self.labels) == len(self.targets)
 
     def trans_samples(self):
@@ -85,10 +82,6 @@ class VMASDataset(Dataset):
                 trans_data.append(row)
             trans_data = np.array(trans_data)
             np.save('./saves/multistation/trans_data.npy', trans_data)
-
-        self.class_weights = [0.7793, 1.1245, 1.1247, 1.1247, 1.1245, 1.1160, 1.1247, 0.7114,
-                              1.1159, 1.1147, 1.1246, 1.1246, 1.1245, 1.1247, 0.5198, 1.1245,
-                              1.1247, -1e9, -1e9, -1e9, -1e9, -1e9, 1.0904, -1e9, -1e9]
 
         self.data = np.load('./saves/multistation/trans_data.npy')
 
@@ -152,16 +145,10 @@ class VMASDataset(Dataset):
                 processed_df.drop(processed_df[condition].index, inplace=True)
             processed_df.reset_index(inplace=True)
 
-            # for id in self.raw_df[self.raw_df['Duration'] >= 600]['UniqueID'].unique():
-            #     self.raw_df[self.raw_df['UniqueID'] == id]
-            #     id = 1
             os.makedirs('./saves/multistation', exist_ok=True)
             processed_df.to_csv(file, index=False)
         else:
             processed_df = pd.read_csv('./saves/multistation/processed_df.csv')
-            # processed_df.drop(np.concatenate([np.arange(304697, 304699), np.arange(1425577, 1425595),
-            #                                   np.arange(1127658, 1127682), np.arange(304718, 304739),
-            #                                   np.arange(524619, 524636), np.arange(1297943, 1297950)]), inplace=True)
         return processed_df
 
     def read_csv_file(self):
@@ -197,17 +184,12 @@ class VMASDataset(Dataset):
                 ~self.raw_df['UniqueID'].isin(
                     self.raw_df[self.raw_df['Duration'] >= 600]['UniqueID'].unique())]  # (617159)
             df.reset_index(inplace=True)
-            # df.drop(['Error Counts', 'Event', 'Unnamed: 6', 'Unnamed: 7', 'Code_y', 'x1', 'index', 'Section',
-            #          'Station', 'Action', 'Timestamp', 'Area', 'UniqueID', 'Unnamed: 0'], axis=1, inplace=True)
-            # df['UniqueID'] = np.floor(pd.to_numeric(join['UniqueID'], errors='coerce')).astype('Int64')
             sub_col = ['Car Code', 'Label', 'Duration']  # , 'Error Types']
             processed_df = df[sub_col]
             os.makedirs('./saves/onestation', exist_ok=True)
             processed_df.to_csv(file, index=False)
         else:
             processed_df = pd.read_csv(file)
-        # car_code = 1111110022
-        # one_car_df = processed_df[processed_df['Car Code'] == car_code]
         return processed_df
 
 
